@@ -34,7 +34,7 @@ exports.forgetPassword = async (req, res) => {
 
         // Email options
         const mailOptions = {
-            from: 'muzammilbeconite@gmail.com',
+            from: 'deemarabiah@gmail.com',
             to: email, // Send to user's email
             subject: 'Password Reset Code',
             text: `Your password reset code is: ${resetPasswordCode}. It expires in 6 hours.`,
