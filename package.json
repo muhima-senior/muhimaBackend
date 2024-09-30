@@ -9,13 +9,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "googleapis": "^144.0.0",
     "mailgun-js": "^0.22.0",
     "mailgun.js": "^10.2.3",
     "mongoose": "^8.6.3",
-    "nodemailer": "^6.9.15"
+    "nodemailer": "^6.9.15",
+    "bcryptjs": "^2.4.3"
   }
 }
