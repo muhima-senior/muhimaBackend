@@ -8,8 +8,8 @@ const User = require('../models/user'); // Assuming your user model is defined i
 const transporter = nodemailer.createTransport({
     service: 'gmail', // Use 'gmail' to use Gmail's service directly
     auth: {
-        user: 'deemarabiah@gmail.com', 
-        pass: 'jqxdheszvlvkpdum', 
+        user: 'muhimaservices@gmail.com', 
+        pass: 'uwrdalyqcwjlbero', 
     },
 });
 
@@ -34,7 +34,7 @@ exports.forgetPassword = async (req, res) => {
 
         // Email options
         const mailOptions = {
-            from: 'deemarabiah@gmail.com',
+            from: 'muhimaservices@gmail.com',
             to: email, // Send to user's email
             subject: 'Password Reset Code',
             text: `Your password reset code is: ${resetPasswordCode}. It expires in 6 hours.`,
