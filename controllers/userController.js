@@ -1,4 +1,3 @@
-const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
@@ -124,14 +123,14 @@ exports.deleteUser = async (req, res) => {
 // Login User
 exports.login = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
+        const { email, password, userType } = req.body;
+        const user = await User.findOne({ email, userType });
         if (!user) return res.status(400).json({ message: 'User not found' });
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) return res.status(401).json({ message: 'Invalid password' });
 
-        res.status(200).json({ message: 'Login successful' });
+        res.status(200).json({ message: 'Login successful', username: user.username, userType: user.userType, userId:user._id });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }

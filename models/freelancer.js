@@ -1,16 +1,24 @@
-
 const mongoose = require('mongoose');
 
 const freelancerSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   profileDescription: String,
-  skills: [String],
   certifications: [String],
-  expertise: [String],
-  location: String,
+  location: {
+    type: { type: String, enum: ['Point'], default: 'Point' }, // GeoJSON type
+    coordinates: {
+      type: [Number], // Array of numbers [longitude, latitude]
+      required: true
+    }
+  },
   availableSlots: [Date],
   rating: { type: Number, default: 0 },
-  transactionHistory: { type: [String], default: [] }
+  transactionHistory: { type: [String], default: [] },
+  mobileNumber: { type: String, required: true },
+  pictureData: { type: Buffer, required: true },
 });
+
+// Create a 2dsphere index on the location field for geospatial queries
+freelancerSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Freelancer', freelancerSchema);
