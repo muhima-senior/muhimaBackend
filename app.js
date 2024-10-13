@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const userRoutes = require('../routes/userRoutes');
+const userRoutes = require('./routes/userRoutes');
+const freelancerRoutes = require('./routes/freelancerRoutes')
+const gigRoutes = require('./routes/gigRoutes')
 const cors = require('cors');
 const app = express();
 const PORT = 3000;
@@ -19,6 +21,10 @@ mongoose.connect(MONGO_URI, {
 
 // Start server
 app.use('/api/users', userRoutes);
+app.use('/api/freelancer', freelancerRoutes)
+app.use('/api/service', gigRoutes)
+
+app.get("/", (req, res) => res.send("Express on Vercel"));
 
 app.listen(PORT, '0.0.0.0',(error) => {
     if (!error)
