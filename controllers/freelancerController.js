@@ -4,42 +4,68 @@ exports.createFreelancer = async (req, res) => {
     try {
       const { userId, profileDescription, certifications, location, availableSlots, mobileNumber } = req.body;
       const pictureData = req.file ? req.file.buffer : null;
-
+  
       if (!pictureData) {
         return res.status(400).json({ error: 'Picture is required' });
       }
-
+  
+      // Parsing certifications and location from JSON strings
+      const parsedCertifications = JSON.parse(certifications);
+      const parsedLocation = JSON.parse(location);
+  
+      // Parsing availableSlots
+      const parsedAvailableSlots = JSON.parse(availableSlots);
+  
+      // Validate availableSlots structure
+      const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      for (const day of daysOfWeek) {
+        if (!parsedAvailableSlots[day] || !Array.isArray(parsedAvailableSlots[day])) {
+          return res.status(400).json({ error: `Available slots for ${day} must be an array` });
+        }
+      }
+  
+      // Creating the new Freelancer instance
       const newFreelancer = new Freelancer({
         userId,
         profileDescription,
-        certifications: JSON.parse(certifications),
-        location: JSON.parse(location),
-        availableSlots: JSON.parse(availableSlots).map(slot => new Date(slot)),
+        certifications: parsedCertifications,
+        location: parsedLocation,
+        availableSlots: parsedAvailableSlots, // No need to map to Date objects, since it's now strings
         mobileNumber,
         pictureData
       });
-
+  
+      // Saving the freelancer profile
       await newFreelancer.save();
-
+  
       res.status(201).json({ message: 'Freelancer profile created successfully' });
     } catch (error) {
       console.error('Error creating freelancer profile:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
+  
 
 
-exports.getFreelancerById = async (req, res) => {
+  exports.getFreelancerById = async (req, res) => {
     try {
         const freelancer = await Freelancer.findById(req.params.id);
         if (!freelancer) {
             return res.status(404).json({ error: 'Freelancer not found' });
         }
-        res.status(200).json(freelancer);
+
+        // Convert pictureData from Buffer to Base64 string
+        const freelancerWithBase64Picture = {
+            ...freelancer._doc, // Spread the freelancer's document to include other fields
+            pictureData: freelancer.pictureData.toString('base64'), // Convert Buffer to Base64
+        };
+
+        res.status(200).json(freelancerWithBase64Picture);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 exports.updateFreelancer = async (req, res) => {
     try {
@@ -71,11 +97,19 @@ exports.deleteFreelancer = async (req, res) => {
 exports.getAllFreelancers = async (req, res) => {
     try {
         const freelancers = await Freelancer.find();
-        res.status(200).json(freelancers);
+
+        // Convert pictureData from Buffer to Base64 string
+        const freelancersWithBase64Pictures = freelancers.map(freelancer => ({
+            ...freelancer._doc, // Spread the freelancer's document to include other fields
+            pictureData: freelancer.pictureData.toString('base64'), // Convert Buffer to Base64
+        }));
+
+        res.status(200).json(freelancersWithBase64Pictures);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 exports.getFreelancersByLocation = async (req, res) => {
     try {
@@ -85,13 +119,20 @@ exports.getFreelancersByLocation = async (req, res) => {
                 $near: {
                     $geometry: {
                         type: 'Point',
-                        coordinates: [parseFloat(longitude), parseFloat(latitude)]
+                        coordinates: [parseFloat(longitude), parseFloat(latitude)],
                     },
-                    $maxDistance: parseFloat(distance) * 1000 // Convert km to meters
-                }
-            }
-        }); 
-        res.status(200).json(freelancers);
+                    $maxDistance: parseFloat(distance) * 1000, // Convert km to meters
+                },
+            },
+        });
+
+        // Convert pictureData from Buffer to Base64 string
+        const freelancersWithBase64Pictures = freelancers.map(freelancer => ({
+            ...freelancer._doc, // Spread the freelancer's document to include other fields
+            pictureData: freelancer.pictureData.toString('base64'), // Convert Buffer to Base64
+        }));
+
+        res.status(200).json(freelancersWithBase64Pictures);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

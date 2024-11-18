@@ -9,7 +9,9 @@ const gigSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     createdAt: { type: Date, default: Date.now },
     discount: { type: Number, default: 0},
-    pictureData: { type: Buffer, required: true }
+    pictureData: { type: Buffer, required: true },
+    rating: { type: Number, default: 0 },
+    ratingCount: {type: Number, default: 0}
   });
   
   module.exports = mongoose.model('Gig', gigSchema);

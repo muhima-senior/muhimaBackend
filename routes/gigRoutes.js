@@ -34,4 +34,5 @@ router.get('/price/:minPrice/:maxPrice', gigController.getGigsByPrice);
 // Get gigs by deadline (startDate and endDate)
 router.get('/deadline/:startDate/:endDate', gigController.getGigsByDeadline);
 
+router.get('/category/:category', gigController.getGigsByCategory);
 module.exports = router;

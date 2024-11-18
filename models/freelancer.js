@@ -11,7 +11,15 @@ const freelancerSchema = new mongoose.Schema({
       required: true
     }
   },
-  availableSlots: [Date],
+  availableSlots: {
+    monday: { type: [String], default: [] },
+    tuesday: { type: [String], default: [] },
+    wednesday: { type: [String], default: [] },
+    thursday: { type: [String], default: [] },
+    friday: { type: [String], default: [] },
+    saturday: { type: [String], default: [] },
+    sunday: { type: [String], default: [] }
+  },
   rating: { type: Number, default: 0 },
   transactionHistory: { type: [String], default: [] },
   mobileNumber: { type: String, required: true },

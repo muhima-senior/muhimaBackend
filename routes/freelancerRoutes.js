@@ -23,7 +23,7 @@ router.delete('/:id', freelancerController.deleteFreelancer);
 router.get('/', freelancerController.getAllFreelancers);
 
 // Get freelancers by location (latitude, longitude, and distance)
-router.get('/location', freelancerController.getFreelancersByLocation);
+router.get('/location/nearby', freelancerController.getFreelancersByLocation);
 
 // Get freelancers by skill
 router.get('/skill/:skill', freelancerController.getFreelancersBySkill);

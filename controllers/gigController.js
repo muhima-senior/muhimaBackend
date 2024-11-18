@@ -2,6 +2,7 @@ const Gig = require('../models/gig'); // Import only once
 const Rating = require('../models/rating'); 
 const Freelancer = require('../models/freelancer')
 const mongoose = require('mongoose');
+const rating = require('../models/rating');
 
 
 // Create a new gig
@@ -87,6 +88,7 @@ exports.getGigById = async (req, res) => {
                         _id: 1,
                         userId: 1,
                         pictureData: 1,
+                        availableSlots: 1,
                     },
                     'user.username': 1
                 }
@@ -132,6 +134,7 @@ exports.deleteGig = async (req, res) => {
 
 exports.getAllGigs = async (req, res) => {
     try {
+        console.log("Check")
         const gigs = await Gig.aggregate([
             {
                 $lookup: {
@@ -169,6 +172,8 @@ exports.getAllGigs = async (req, res) => {
                     price: 1,
                     category: 1,
                     discount: 1,
+                    rating: 1,
+                    ratingCount: 1,
                     freelancer: {
                         _id: 1,
                         userId: 1,
@@ -240,6 +245,35 @@ exports.getGigsByDeadline = async (req, res) => {
     try {
         const gigs = await Gig.find({ deadline: { $gte: req.params.startDate, $lte: req.params.endDate } });
         res.status(200).json(gigs);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getGigsByCategory = async (req, res) => {
+    try {
+        const { category } = req.params; // Get category from request parameters
+
+        // Find gigs by category and populate the freelancer and user details
+        const gigs = await Gig.find({ category })
+            .populate({
+                path: 'freelancerId',
+                populate: {
+                    path: 'userId', // Populate the userId inside freelancerId
+                    select: 'username', // Select only the username field from the user model
+                },
+            });
+
+        // Convert pictureData to base64 and include username
+        const gigsWithDetails = gigs.map(gig => {
+            return {
+                ...gig.toObject(),
+                pictureData: gig.pictureData ? gig.pictureData.toString('base64') : null, // Convert pictureData to base64
+                username: gig.freelancerId?.userId?.username || null, // Include username if available
+            };
+        });
+
+        res.status(200).json(gigsWithDetails); // Return the found gigs with additional details
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
