@@ -1,11 +1,11 @@
 const Appointment = require('../models/appointment');
 const Gig = require('../models/gig')
 const Freelancer = require('../models/freelancer');
-
+const BookingHistory = require('../models/bookingHistory')
 
 exports.createAppointment = async (req, res) => {
     try {
-        const { gigId, userId, appointmentDates, quantity, total } = req.body;
+        const { gigId, userId, appointmentDates, quantity, total , address, paymentMethod} = req.body;
         
         const gig = await Gig.findById(gigId);
 
@@ -30,9 +30,11 @@ exports.createAppointment = async (req, res) => {
         // }
 
         // If the slot is available, create the appointment
-        const appointment = new Appointment({ gigId, freelancerId, userId, appointmentDates, quantity, total });
+        const appointment = new Appointment({ gigId, freelancerId, userId, appointmentDates, quantity, total, address, paymentMethod});
         await appointment.save();
 
+        const bookingHistory = new BookingHistory({appointmentId: appointment._id, status:"pending"});
+        await bookingHistory.save();
 
         res.status(201).json(appointment);
     } catch (error) {
@@ -62,6 +64,25 @@ exports.confirmAppointment = async (req, res) => {
     }
 };
 
+exports.updateStatus = async (req, res) => {
+    try {
+        const { appointmentId, status} = req.body;
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            return res.status(404).json({ message: 'Appointment not found' });
+        }
+        appointment.status = status;
+        await appointment.save();
+        // Remove the booked slot from the freelancer's availableSlots
+        // freelancer.availableSlots = freelancer.availableSlots.filter(slot => 
+        //     slot.getTime() !== new Date(appointmentDate).getTime()
+        // );
+        // await freelancer.save();
+        res.status(200).json({ message: 'Appointment confirmed successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
 
 exports.getAppointmentById = async (req, res) => {
@@ -161,12 +182,44 @@ exports.getAllAppointments = async (req, res) => {
 
 exports.getAppointmentsByFreelancer = async (req, res) => {
     try {
-        const appointments = await Appointment.find({ freelancerId: req.params.freelancerId });
-        res.status(200).json(appointments);
+      // Fetch freelancer based on userId
+      console.log(req.params.userId)
+      const freelancer = await Freelancer.findOne({ userId: req.params.userId });
+
+      if (!freelancer) {
+        return res.status(404).json({ error: 'Freelancer not found' });
+      }
+  
+      // Fetch all appointments for the freelancer
+      const appointments = await Appointment.find({
+        freelancerId: freelancer._id, // Use freelancer's _id after fetching the freelancer
+      });
+  
+      // Use Promise.all to fetch gig details for each appointment
+      const appointmentsWithGigTitle = await Promise.all(
+        appointments.map(async (appointment) => {
+          const gig = await Gig.findById(appointment.gigId);
+  
+          return {
+            ...appointment.toObject(), // Convert Mongoose document to plain JS object
+            gigTitle: gig ? gig.title : null, // Append gig title (or null if not found)
+          };
+        })
+      );
+  
+      // Sort appointments by the earliest date in the 'appointmentDates' array
+      appointmentsWithGigTitle.sort((a, b) => {
+        const aEarliestDate = new Date(a.appointmentDates[0].date);
+        const bEarliestDate = new Date(b.appointmentDates[0].date);
+        return aEarliestDate - bEarliestDate; // Ascending order
+      });
+  
+      res.status(200).json(appointmentsWithGigTitle);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
-};
+  };
+  
 
 exports.getAppointmentsByUser = async (req, res) => {
     try {

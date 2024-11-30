@@ -191,33 +191,24 @@ exports.getAllGigs = async (req, res) => {
 };
 
 
-
-
-
-
 exports.getGigsByFreelancer = async (req, res) => {
     try {
         const userId = req.params.userId;
-        const freelancer = await Freelancer.findOne({userId});
-        const gigs = await Gig.find({ freelancerId: freelancer._id });
-        console.log(gigs)
+        const freelancer = await Freelancer.findOne({ userId });
+        if (!freelancer) {
+            return res.status(404).json({ error: 'Freelancer not found' });
+        }
 
-        const gigsWithRatings = await Promise.all(gigs.map(async (gig) => {
-            const ratings = await Rating.find({ gigId: gig._id });
-            
-            let averageRating = 0;
-            if (ratings.length > 0) {
-                const totalRating = ratings.reduce((sum, rating) => sum + rating.value, 0);
-                averageRating = totalRating / ratings.length;
-            }
-            
+        const gigs = await Gig.find({ freelancerId: freelancer._id });
+        const gigsWithDetails = gigs.map(gig => {
             return {
                 ...gig.toObject(),
-                averageRating: parseFloat(averageRating.toFixed(1))
+                pictureData: gig.pictureData ? gig.pictureData.toString('base64') : null, // Convert pictureData to base64
+                rating: gig.rating ? gig.rating.toFixed(1) : null, // Fix rating to 1 decimal place
             };
-        }));
-        
-        res.status(200).json(gigsWithRatings);
+        });
+
+        res.status(200).json(gigsWithDetails);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

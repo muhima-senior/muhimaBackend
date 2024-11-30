@@ -38,6 +38,8 @@ const appointmentSchema = new mongoose.Schema({
   },
   quantity: { type: Number, required: true },
   total: { type: Number, required: true },
+  address: {type: String, required: true, default:"Riyadh"},
+  paymentMethod: {type: String, required: true, default: "COD"},
 });
 
 const Appointment = mongoose.model('Appointment', appointmentSchema);

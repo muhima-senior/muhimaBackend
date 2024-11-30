@@ -6,7 +6,10 @@ const appointmentController = require('../controllers/appointmentController');
 router.post('/create', appointmentController.createAppointment);
 
 // Route to confirm an appointment
-router.post('/confirm', appointmentController.confirmAppointment);
+router.patch('/confirm', appointmentController.confirmAppointment);
+
+// Route to confirm an appointment
+router.patch('/updateStatus', appointmentController.updateStatus);
 
 // Route to get an appointment by ID
 router.get('/:id', appointmentController.getAppointmentById);
@@ -21,7 +24,7 @@ router.delete('/:id', appointmentController.deleteAppointment);
 router.get('/', appointmentController.getAllAppointments);
 
 // Route to get appointments by freelancer ID
-router.get('/freelancer/:freelancerId', appointmentController.getAppointmentsByFreelancer);
+router.get('/freelancer/:userId', appointmentController.getAppointmentsByFreelancer);
 
 // Route to get appointments by user ID
 router.get('/user/:userId', appointmentController.getAppointmentsByUser);

@@ -1,4 +1,5 @@
 const Freelancer = require('../models/freelancer');
+const User = require('../models/user');
 
 exports.createFreelancer = async (req, res) => {
     try {
@@ -58,6 +59,26 @@ exports.createFreelancer = async (req, res) => {
         const freelancerWithBase64Picture = {
             ...freelancer._doc, // Spread the freelancer's document to include other fields
             pictureData: freelancer.pictureData.toString('base64'), // Convert Buffer to Base64
+        };
+
+        res.status(200).json(freelancerWithBase64Picture);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getFreelancerByUserId = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId)
+        const freelancer = await Freelancer.findOne({userId : req.params.userId});
+        if (!freelancer) {
+            return res.status(404).json({ error: 'Freelancer not found' });
+        }
+        // Convert pictureData from Buffer to Base64 string
+        const freelancerWithBase64Picture = {
+            ...freelancer._doc, // Spread the freelancer's document to include other fields
+            pictureData: freelancer.pictureData.toString('base64'), // Convert Buffer to Base64
+            userName: user.username
         };
 
         res.status(200).json(freelancerWithBase64Picture);
@@ -157,4 +178,22 @@ exports.getFreelancersByRating = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+exports.updateSlots = async (req,res) => {
+    try{
+        const { userId, availableSlots} = req.body;
+        const freelancer = await Freelancer.findOne({userId : userId});
+
+        if (!freelancer) {
+            return res.status(404).json({ message: 'Freelancer not found' });
+        }
+        freelancer.availableSlots = availableSlots
+
+        freelancer.save()
+        res.status(200).json({ message: 'Slots added successfully' });
+
+    } catch(error) {
+        res.status(500).json({ error: error.message });
+    }
+}
 

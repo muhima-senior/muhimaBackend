@@ -1,6 +1,7 @@
 const Appointment = require('../models/appointment'); // Import Appointment model
 const Gig = require('../models/gig'); // Import Gig model
 const Rating = require('../models/rating'); // Import Rating model
+const Freelancer = require('../models/freelancer');
 
 exports.createRating = async (req, res) => {
     try {
@@ -11,6 +12,7 @@ exports.createRating = async (req, res) => {
         if (!appointment) {
             return res.status(404).send({ error: 'Appointment not found' });
         }
+
 
         const gigId = appointment.gigId;
         if (!gigId) {
@@ -112,4 +114,56 @@ exports.getRatingsByGigId = async (req, res) => {
     }
 };
 
-// ... existing code ...
+exports.getRatingsByFreelancer = async (req, res) => {
+    try {
+      const { userId } = req.params;
+  
+      // Fetch freelancer by userId
+      const freelancer = await Freelancer.findOne({ userId });
+  
+      if (!freelancer) {
+        return res.status(404).json({ error: 'Freelancer not found' });
+      }
+  
+      // Fetch all appointments for the freelancer
+      const appointments = await Appointment.find({ freelancerId: freelancer._id });
+  
+      // Extract appointment IDs
+      const appointmentIds = appointments.map((appointment) => appointment._id);
+  
+      // Find all ratings related to the fetched appointments
+      const ratings = await Rating.find({ appointmentId: { $in: appointmentIds } });
+  
+      // Enrich ratings with appointment and gig details
+      const ratingsWithDetails = await Promise.all(
+        ratings.map(async (rating) => {
+          const appointment = appointments.find(
+            (appt) => appt._id.toString() === rating.appointmentId.toString()
+          );
+  
+          const gig = await Gig.findById(appointment.gigId);
+  
+          return {
+            ...rating.toObject(),
+            appointment: appointment ? appointment.toObject() : null,
+            gig: gig
+              ? {
+                  title: gig.title,
+                  pictureData: gig.pictureData
+                    ? gig.pictureData.toString('base64') // Convert pictureData to Base64
+                    : null,
+                }
+              : null,
+          };
+        })
+      );
+  
+      // Send the enriched ratings
+      res.status(200).json(ratingsWithDetails);
+    } catch (error) {
+      // Handle errors
+      res.status(500).json({ error: error.message });
+    }
+  };
+  
+  

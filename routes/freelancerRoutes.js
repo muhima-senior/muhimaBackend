@@ -13,6 +13,8 @@ router.post('/', upload.single('pictureData'), freelancerController.createFreela
 // Get a freelancer by ID
 router.get('/:id', freelancerController.getFreelancerById);
 
+router.get('/user/:userId', freelancerController.getFreelancerByUserId);
+
 // Update a freelancer by ID
 router.put('/:id', freelancerController.updateFreelancer);
 
@@ -31,4 +33,5 @@ router.get('/skill/:skill', freelancerController.getFreelancersBySkill);
 // Get freelancers by rating
 router.get('/rating/:rating', freelancerController.getFreelancersByRating);
 
+router.patch('/updateSlot', freelancerController.updateSlots)
 module.exports = router;
