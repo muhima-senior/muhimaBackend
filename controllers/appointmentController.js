@@ -2,6 +2,8 @@ const Appointment = require('../models/appointment');
 const Gig = require('../models/gig')
 const Freelancer = require('../models/freelancer');
 const BookingHistory = require('../models/bookingHistory')
+const Payment = require('../models/payment');
+
 
 exports.createAppointment = async (req, res) => {
     try {
@@ -14,27 +16,12 @@ exports.createAppointment = async (req, res) => {
         }
     
         const freelancerId = gig.freelancerId;
-        // Find the freelancer
-        // const freelancer = await Freelancer.findById(freelancerId);
-        // if (!freelancer) {
-        //     return res.status(404).json({ message: 'Freelancer not found' });
-        // }
 
-        // Check if the appointmentDate is in the freelancer's availableSlots
-        // const isSlotAvailable = freelancer.availableSlots.some(slot => 
-        //     slot.getTime() === new Date(appointmentDate).getTime()
-        // );
-
-        // if (!isSlotAvailable) {
-        //     return res.status(400).json({ message: 'The selected appointment slot is not available' });
-        // }
-
-        // If the slot is available, create the appointment
         const appointment = new Appointment({ gigId, freelancerId, userId, appointmentDates, quantity, total, address, paymentMethod});
         await appointment.save();
 
-        const bookingHistory = new BookingHistory({appointmentId: appointment._id, status:"pending"});
-        await bookingHistory.save();
+        const payment = new Payment({appointmentId: appointment._id, amount: total, paymentMethod:paymentMethod})
+        await payment.save();
 
         res.status(201).json(appointment);
     } catch (error) {
@@ -94,7 +81,7 @@ exports.getAppointmentById = async (req, res) => {
             })
             .populate({
                 path: 'freelancerId', // Populate freelancer data
-                select: 'userId pictureData', // Select userId and pictureData from Freelancer model
+                select: 'userId pictureData mobileNumber', // Select userId and pictureData from Freelancer model
                 populate: {
                     path: 'userId', // Nested populate to fetch user data
                     select: 'username', // Select username from User model
@@ -220,6 +207,49 @@ exports.getAppointmentsByFreelancer = async (req, res) => {
     }
   };
   
+  exports.getAppointmentsByFreelancerPaymentStatus = async (req, res) => { 
+    try {
+      console.log(req.params.userId);
+      
+      // Fetch freelancer based on userId
+      const freelancer = await Freelancer.findOne({ userId: req.params.userId });
+  
+      if (!freelancer) {
+        return res.status(404).json({ error: 'Freelancer not found' });
+      }
+  
+      // Fetch all appointments for the freelancer
+      const appointments = await Appointment.find({
+        freelancerId: freelancer._id, // Use freelancer's _id after fetching the freelancer
+      });
+  
+      // Use Promise.all to fetch gig details and payment status for each appointment
+      const appointmentsWithDetails = await Promise.all(
+        appointments.map(async (appointment) => {
+          const gig = await Gig.findById(appointment.gigId);
+          const payment = await Payment.findOne({ appointmentId: appointment._id });
+  
+          return {
+            ...appointment.toObject(),     // Convert Mongoose document to plain JS object
+            gigTitle: gig ? gig.title : null,  // Append gig title (or null if not found)
+            paymentStatus: payment ? payment.status : 'Pending',  // Append payment status or 'Pending' if not found
+          };
+        })
+      );
+  
+      // Sort appointments by the earliest date in the 'appointmentDates' array
+      appointmentsWithDetails.sort((a, b) => {
+        const aEarliestDate = new Date(a.appointmentDates[0].date);
+        const bEarliestDate = new Date(b.appointmentDates[0].date);
+        return aEarliestDate - bEarliestDate; // Ascending order
+      });
+  
+      res.status(200).json(appointmentsWithDetails);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+  
 
 exports.getAppointmentsByUser = async (req, res) => {
     try {
@@ -249,5 +279,3 @@ exports.getAppointmentsByUser = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-

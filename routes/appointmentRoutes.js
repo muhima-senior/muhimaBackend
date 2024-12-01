@@ -26,6 +26,9 @@ router.get('/', appointmentController.getAllAppointments);
 // Route to get appointments by freelancer ID
 router.get('/freelancer/:userId', appointmentController.getAppointmentsByFreelancer);
 
+// Route to get appointments by freelancer ID
+router.get('/freelancer/payment/:userId', appointmentController.getAppointmentsByFreelancerPaymentStatus);
+
 // Route to get appointments by user ID
 router.get('/user/:userId', appointmentController.getAppointmentsByUser);
 

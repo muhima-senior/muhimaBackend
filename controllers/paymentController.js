@@ -78,3 +78,29 @@ exports.deletePayment = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+
+exports.payPayment = async (req, res) => {
+    try {
+      const { status } = req.body;
+  
+      const updatedPayment = await Payment.findOneAndUpdate(
+        { appointmentId: req.params.id }, // Find by appointmentId
+        { status }, // Update the status field
+        {
+          new: true,           // Return the updated document
+          runValidators: true, // Validate the updated status based on the schema
+        }
+      );
+  
+      if (!updatedPayment) {
+        return res.status(404).json({ message: 'Payment not found' });
+      }
+  
+      res.status(200).json(updatedPayment);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  };
+  
+  

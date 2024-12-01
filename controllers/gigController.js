@@ -89,6 +89,7 @@ exports.getGigById = async (req, res) => {
                         userId: 1,
                         pictureData: 1,
                         availableSlots: 1,
+                        mobileNumber: 1,
                     },
                     'user.username': 1
                 }

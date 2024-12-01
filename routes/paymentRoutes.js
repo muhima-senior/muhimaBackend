@@ -15,6 +15,10 @@ router.get('/:id', paymentController.getPaymentById);
 // Update a payment by ID
 router.put('/:id', paymentController.updatePayment);
 
+// Update a payment by ID
+router.patch('/pay/:id', paymentController.payPayment);
+
+
 // Delete a payment by ID
 router.delete('/:id', paymentController.deletePayment);
 
